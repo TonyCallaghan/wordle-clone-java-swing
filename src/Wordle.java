@@ -33,7 +33,7 @@ public class Wordle implements ActionListener
     Color darkGrey = new Color(59, 59, 60, 255);
 
     public static void main(String[] args) {
-        new Main();
+        new Wordle();
     }
 
     @Override
