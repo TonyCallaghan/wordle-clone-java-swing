@@ -7,33 +7,43 @@ import java.nio.charset.StandardCharsets;
 // GUI
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.*;
 
 public class Wordle implements ActionListener {
     // ----- What I need -----
     JFrame frame;
+
     JPanel title; // stores the heading label and instructions pop up window
     JButton help; // Displays image - in pop up window - when clicked
-    JButton replay;
+    static JButton replay;
     JLabel heading; 
+
     JPanel grid; // stores the labels that display grey/green/orange ie RESULTS
     static JLabel[] squares = new JLabel[30]; 
+
     JPanel keyboard; // stores buttons for the user's input
     static JTextField textfield; // stores user input
-    JPanel message; // stores Label displaying welcome message/ error message
+    static JTextField suggestionField; // stores user input
+
 
     // ------- Buttons --------
     JButton deleteButton = new JButton("<"); // Backspace
-    JButton enterButton = new JButton("ENTER"); // Enter
+    static JButton enterButton = new JButton("ENTER"); // Enter
     JButton[] letters = new JButton[26]; // Alphabet
 
     // ------- Additional -------
+    static int chances = 0;
     static Font hel = new Font("Helvetica", Font.BOLD, 30); // Font used in wordle
     static Font helSmaller = new Font("Helvetica", Font.BOLD, 13);
     static String userInput = "", answer = "";
     static int rowCount = 0;
     static List<String> words = new ArrayList<>();
+    static List<String> allowable = new ArrayList<>();
+    static ArrayList<String> suggestions = new ArrayList<>();
     static String[] alphabet = { "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
     "A", "S", "D", "F", "G", "H", "J", "K", "L", "Z", "X", "C", "V", "B", "N", "M"
     };
@@ -46,15 +56,18 @@ public class Wordle implements ActionListener {
     static Color darkGrey = new Color(59, 59, 60);
     static Color offWhite = new Color(255,255,242);
 
-    Wordle () {
+    Wordle () throws IOException {
         // -------- Set Up --------
         frame = new JFrame("WORDLE");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Required -- can't close window without it
         frame.setFont(hel); // For entire frame
-        frame.setSize(600, 800); // Not definite
+        frame.setSize(600, 900); // Not definite
         frame.setResizable(false); // Remove maximize option - Will always be responsive now :)
         frame.setLayout(null);
         frame.getContentPane().setBackground(dark);
+        BufferedImage image = ImageIO.read(getClass().getResourceAsStream("/imgs/logo.png"));
+        frame.setIconImage(image);
+        frame.setLocationRelativeTo(null);
 
         // ----- Title -----
         title = new JPanel();
@@ -105,11 +118,11 @@ public class Wordle implements ActionListener {
         }
 
         // ----- User Input Field -----
-        textfield = new JTextField("hi");
+        textfield = new JTextField("HI!");
         textfield.setBounds(142, 480, 300, 50); // Position x, y, length, height
         textfield.setHorizontalAlignment(JTextField.CENTER); // Center align the input
         textfield.setFont(hel);
-        //textfield.setEditable(false); // Doesn't allow input - only from buttons
+        textfield.setEditable(false); // Doesn't allow input - only from buttons
         textfield.setBorder(new LineBorder(darkGrey, 4));
         textfield.setBackground(dark);
         textfield.setForeground(offWhite);
@@ -176,22 +189,32 @@ public class Wordle implements ActionListener {
         }
         keyboard.add(row3);
 
+        // ----- Suggestion Box -----
+        suggestionField = new JTextField();
+        suggestionField.setBounds(70, 760, 460, 50); // Position x, y, length, height
+        suggestionField.setHorizontalAlignment(JTextField.CENTER); // Center align the input
+        suggestionField.setFont(hel);
+        suggestionField.setEditable(false); // Doesn't allow input - only from buttons
+        suggestionField.setBorder(new LineBorder(darkGrey, 4));
+        suggestionField.setBackground(dark);
+        suggestionField.setForeground(offWhite);
+
         // ----- Finalize the JFrame -----
 		frame.add(title);
         frame.add(grid);
         frame.getContentPane().add(keyboard);
         frame.add(textfield);
-		frame.add(textfield);
-        frame.setLocationRelativeTo(null);
+		frame.add(suggestionField);
 		frame.setVisible(true); // Required for window to open
 
     }
     public static void main(String[] args) throws IOException {
-        Path myPath = Paths.get("C:/Users/Tony/wordle-clone-java-swing/src/words.txt"); // Get file with wordle-words in it
-        words = Files.readAllLines(myPath, StandardCharsets.UTF_8); // fill array
+        Path wordsPath = Paths.get("C:/Users/Tony/wordle-clone-java-swing/src/words.txt"); // Get file with wordle-words in it
+        Path allowPath = Paths.get("C:/Users/Tony/wordle-clone-java-swing/src/allowable.txt");
+        words = Files.readAllLines(wordsPath, StandardCharsets.UTF_8); // fill array
+        allowable = Files.readAllLines(allowPath, StandardCharsets.UTF_8);
         newWord();
         new Wordle();
-        System.out.print(answer);
     }
 
     @Override
@@ -202,6 +225,8 @@ public class Wordle implements ActionListener {
 			}
 		}
 
+
+
         if (e.getSource()==deleteButton) {
 			userInput = textfield.getText();
             if(userInput.length() > 0)
@@ -210,19 +235,32 @@ public class Wordle implements ActionListener {
 
         if(e.getSource()==enterButton) {
             userInput = textfield.getText();
-            if (userInput.length() == 5 && words.contains(userInput.toLowerCase())) {
+
+            if(userInput.equals("XXXXX"))
+                letsCheckAlgo();
+
+            if(chances < 6) {
+                if (userInput.length() == 5 && allowable.contains(userInput.toLowerCase())) {
                 textfield.setText("");
-                checkWord();
-            } else if(userInput.length() == 5 && !words.contains(userInput.toLowerCase())) {
-                textfield.setText("Not in my list");
-            }
+                chances++;
+                checkWord(); 
+
+                } else if(userInput.length() == 5 && !allowable.contains(userInput.toLowerCase())) {
+                    textfield.setText("INVALID WORD");
+                }
+            } 
 		}
 
         if(e.getSource()==help) {
-            HelpWindow helpPage = new HelpWindow();
+                try {
+                    HelpWindow helpPage = new HelpWindow();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
         }
 
         if(e.getSource()==replay) {
+            textfield.setText("");
             resetGame();
         }
     }
@@ -241,9 +279,18 @@ public class Wordle implements ActionListener {
             }
         }
         rowCount += 5;
-        if (rowCount ==24) {
-            resetGame();
+        if (answer.equals(userInput)) {
+            textfield.setText("WELL DONE");
+            suggestionField.setText("\u21BB PLAY AGAIN \u21BB");
+            chances = 6; // game over
+        } else if (chances == 6) {
             textfield.setText("Ans: " + answer);
+            suggestionField.setText("\u21BB TRY AGAIN \u21BB");
+            // game over
+        }
+
+        if (chances < 6) {
+            findSuggestions();
         }
     }
 
@@ -251,16 +298,25 @@ public class Wordle implements ActionListener {
         int randomWord = new Random().nextInt(words.size());
         answer = words.get(randomWord).toUpperCase();
         rowCount = 0;
+        suggestionReset();
     }
+
+    public static void suggestionReset() {
+        for(int i =0; i < words.size(); i++) {
+            suggestions.add(words.get(i));
+        }
+    }
+
 
     public static void resetGame() {
         newWord();
+        chances = 0;
         for(JLabel i : squares) {
             i.setBackground(dark);
             i.setText("");
             i.setBorder(new LineBorder(darkGrey, 2));
         }
-            
+        suggestionField.setText("");
     }
 
     public static void kbPanel(JPanel row) {
@@ -276,4 +332,95 @@ public class Wordle implements ActionListener {
         b.setOpaque(true);
         b.setBorder(new LineBorder(dark, 2));
     }
+
+    public static void findSuggestions () {
+
+        for(int i = 0; i < userInput.length(); i ++) {
+            for(int j = 0; j < suggestions.size(); j ++) {
+                String check = suggestions.get(j).toUpperCase();
+                if(greenOrangeOrGrey(i) == 0 ) {
+                    if(check.contains(String.valueOf(userInput.charAt(i)))) {
+                        suggestions.remove(j);
+                        if(j!=0)
+                            j=j-1;
+                    }
+                        
+                } else if(greenOrangeOrGrey(i) == 1) {
+                    if (!check.contains(String.valueOf(userInput.charAt(i)))) {
+                        suggestions.remove(j);
+                        if(j!=0)
+                            j=j-1;
+                    }
+
+                    if (userInput.charAt(i) == check.charAt(i)) {
+                        suggestions.remove(j);
+                        if(j!=0)
+                            j=j-1;
+                    }
+
+                } else if(greenOrangeOrGrey(i) == 2) {
+                    if (userInput.charAt(i) != check.charAt(i)) {
+                        suggestions.remove(j);
+                        if(j!=0)
+                            j=j-1;
+                    }
+                }
+            }
+        }
+        printSuggestions();
+    }
+
+    public static void printSuggestions () {
+        String s1="",s2="",s3="",printFinal;
+        if(0 < suggestions.size())
+            s1 = suggestions.get(0).toUpperCase();
+        if(1 < suggestions.size())
+            s2 = suggestions.get(1).toUpperCase();
+        if(2 < suggestions.size())        
+            s3 = suggestions.get(2).toUpperCase();
+
+        if(!s3.equals(""))
+            printFinal = s1 + "   |   " + s2 + "   |   " + s3;
+        else if (!s2.equals(""))
+            printFinal = s1 + "   |   " + s2;
+        else if (!s1.equals(""))
+            printFinal = s1;
+        else
+            printFinal = "??????";
+
+        suggestionField.setText(printFinal);
+    }
+
+    public static int greenOrangeOrGrey(int index) {
+        if(userInput.charAt(index) == answer.charAt(index))
+            return 2; // green
+        else if (answer.contains(String.valueOf(userInput.charAt(index))))
+            return 1; // orange
+        else 
+            return 0; // grey
+    }
+
+    public static void letsCheckAlgo() {          
+        if(!instructions("ALIEN"))
+            if(!instructions("TOURS"))
+                if(!instructions(suggestions.get(0).toUpperCase()))
+                    if(!instructions(suggestions.get(0).toUpperCase()))
+                        if(!instructions(suggestions.get(0).toUpperCase()))
+                            if(!instructions(suggestions.get(0).toUpperCase())) {
+
+                            }
+                   
+    }
+
+    public static boolean instructions (String s1) {
+        textfield.setText(s1);
+        userInput = s1;
+        enterButton.doClick(100);
+        if(textfield.getText().equals("WELL DONE")) {
+            System.out.println("Game finished");
+            return true;
+        } else 
+            return false;
+    }
 }
+
