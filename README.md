@@ -4,6 +4,7 @@
 - University assignment for CS211.
 - Assignment is worth 3%.
 - Additional task is worth an extra 3%.
+- A clip of the final version can be seen [here](https://user-images.githubusercontent.com/57832437/155008633-87d676a4-85cd-4020-8505-c57ecfb179d7.mp4).
 
 ### Task:
 - Create a program identical to [WORDLE](https://www.nytimes.com/games/wordle/index.html).
