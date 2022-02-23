@@ -19,7 +19,7 @@
 
 ![image](https://user-images.githubusercontent.com/57832437/155003030-a195771a-bee8-4c39-8d25-c46ac147beeb.png)
 
-- I wanted it to be identical as possible to Wordle. - Which was tough as swing is ancient 🙂
+- I wanted it to be identical as possible to Wordle. - Which was tough as swing is quite old 🙂
 - Used same font (before NYT takeover), color palette and also the same words that wordle has as possible answers, which differs from words they accept.
 - Program has a help window and replay function and is errorfree (As user's input is limited, just like Wordle).
 
